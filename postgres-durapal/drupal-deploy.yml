@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: drupal-dpl
+  name: drupal-dpl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drupal-dpl
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: drupal-dpl
+    spec:
+      containers:
+      - image: drupal:latest
+        name: drupal
+        ports:
+        -  containerPort: 8080
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key:  postgres-password
+          name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+               name: drupal-configmap
+               key: database_url
+        
+    
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: drupal-service
+spec:
+  selector:
+    app: drupal-dpl
+  type: LoadBalancer
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 32000
+  
